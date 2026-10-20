@@ -1,11 +1,23 @@
-import 'dotenv/config'
-import express from 'express'
+import 'dotenv/config';
+import mongoose from 'mongoose';
+import express from 'express';
 
-const app = express()
+const app = express();
+const uri = process.env.MONGODB_URI;
+const port = process.env.PORT;
 
-app.get('/api/health', (req, res) => {
-  res.json({ ok: true })
+for (let attempt = 1; attempt <= 5; attempt += 1){
+    try {
+        await mongoose.connect(uri)
+        break
+
+    } catch (error) {
+        if (attempt == 5 )throw error
+        console.warn (`MongoDB unavailable (attempt ${attempt}/5). Retrying in 3s…`)
+        await new Promise((resolve) => setTimeout(resolve, 3000))
+    }
+}
+
+app.listen(port, ()=>{
+    console.log(`API listening on http://localhost:${port}`)
 })
-
-const port = process.env.PORT || 5000
-app.listen(port, () => console.log(`API listening on http://localhost:${port}`))
